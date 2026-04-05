@@ -1,0 +1,392 @@
+{
+  "id": "exo-mail-onboarding",
+  "title": "Exo Mail Client Architecture Tour",
+  "description": "A guided walkthrough of the Exo desktop mail client — an Electron app with AI-powered email analysis, draft generation, and an agent framework",
+  "version": "1.0.0",
+  "audience": "New Developers & AI Assistants",
+  "prerequisites": [
+    "Familiarity with Electron (main/renderer process model)",
+    "Basic TypeScript and React knowledge"
+  ],
+  "steps": [
+    {
+      "id": "step-1-overview",
+      "title": "Welcome to Exo",
+      "description": "Exo is a desktop Gmail client with multi-account support, AI-powered email analysis, automatic draft generation, sender profile enrichment, and a full agent framework. The codebase is split across a backend process, a frontend process, and shared type definitions.",
+      "estimatedTime": 45,
+      "colorMode": "fileTypes"
+    },
+    {
+      "id": "step-2-electron-architecture",
+      "title": "Electron Process Architecture",
+      "description": "The app follows Electron's multi-process model. The main process (blue) handles all backend logic — Gmail API calls, AI services, the database, and IPC handlers. The renderer process (green) is the frontend with state management and UI components. The preload bridge (orange) connects them safely, and shared type definitions (purple) keep both sides in sync.",
+      "estimatedTime": 60,
+      "focusDirectory": "src",
+      "highlightLayers": [
+        {
+          "id": "main-process",
+          "name": "Main Process (Backend)",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "src/main", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "renderer-process",
+          "name": "Renderer Process (Frontend)",
+          "color": "#10b981",
+          "items": [
+            { "path": "src/renderer", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "preload-bridge",
+          "name": "Preload Bridge",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "src/preload", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "shared-types",
+          "name": "Shared Types",
+          "color": "#a855f7",
+          "items": [
+            { "path": "src/shared", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "hover-directory",
+          "description": "Hover over the main process to see its backend modules",
+          "target": "src/main"
+        }
+      ]
+    },
+    {
+      "id": "step-3-core-services",
+      "title": "Core Services — AI & Email Logic",
+      "description": "The services layer is the heart of the app. The red group handles AI — analyzing which emails need replies, generating draft responses, and tracking LLM costs. The blue group handles Gmail communication and background sync, including a prefetch service that automatically processes new emails as they arrive.",
+      "estimatedTime": 90,
+      "focusDirectory": "src/main/services",
+      "highlightLayers": [
+        {
+          "id": "ai-services",
+          "name": "AI/Claude Services",
+          "color": "#ef4444",
+          "items": [
+            { "path": "src/main/services/anthropic-service.ts", "type": "file" },
+            { "path": "src/main/services/email-analyzer.ts", "type": "file" },
+            { "path": "src/main/services/draft-generator.ts", "type": "file" },
+            { "path": "src/main/services/draft-pipeline.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "gmail-services",
+          "name": "Gmail & Sync",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "src/main/services/gmail-client.ts", "type": "file" },
+            { "path": "src/main/services/email-sync.ts", "type": "file" },
+            { "path": "src/main/services/background-sync.ts", "type": "file" },
+            { "path": "src/main/services/prefetch-service.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click the highlighted file to see the central LLM integration",
+          "target": "src/main/services/anthropic-service.ts"
+        },
+        {
+          "type": "click-file",
+          "description": "Click the highlighted file to see background processing orchestration",
+          "target": "src/main/services/prefetch-service.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-4-ipc-layer",
+      "title": "IPC Communication Layer",
+      "description": "Electron's main and renderer processes communicate through IPC. The project has over 20 handler modules, each owning a domain — OAuth and email fetching, multi-account sync, AI analysis, draft generation and refinement, and more. The preload bridge exposes these as a typed API to the frontend.",
+      "estimatedTime": 60,
+      "focusDirectory": "src/main/ipc",
+      "highlightLayers": [
+        {
+          "id": "critical-ipc",
+          "name": "Core IPC Handlers",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "src/main/ipc/gmail.ipc.ts", "type": "file" },
+            { "path": "src/main/ipc/sync.ipc.ts", "type": "file" },
+            { "path": "src/main/ipc/analysis.ipc.ts", "type": "file" },
+            { "path": "src/main/ipc/drafts.ipc.ts", "type": "file" },
+            { "path": "src/main/ipc/agent.ipc.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "hover-directory",
+          "description": "Hover over the directory to see all handler domains",
+          "target": "src/main/ipc"
+        }
+      ]
+    },
+    {
+      "id": "step-5-agent-framework",
+      "title": "Agent Framework",
+      "description": "Exo includes an agent framework for autonomous AI workflows. The orchestrator coordinates multi-step tasks. Swappable providers supply the LLM backend, while a library of tools gives agents the ability to read emails, run analyses, browse the web, and maintain memory. A permission gate enforces user approval before sensitive actions, and an audit log tracks every agent action.",
+      "estimatedTime": 75,
+      "focusDirectory": "src/main/agents",
+      "highlightLayers": [
+        {
+          "id": "agent-core",
+          "name": "Agent Orchestration",
+          "color": "#a855f7",
+          "items": [
+            { "path": "src/main/agents/orchestrator.ts", "type": "file" },
+            { "path": "src/main/agents/agent-coordinator.ts", "type": "file" },
+            { "path": "src/main/agents/permission-gate.ts", "type": "file" },
+            { "path": "src/main/agents/audit-log.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "agent-tools",
+          "name": "Agent Tools",
+          "color": "#06b6d4",
+          "items": [
+            { "path": "src/main/agents/tools", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "agent-providers",
+          "name": "Agent Providers",
+          "color": "#10b981",
+          "items": [
+            { "path": "src/main/agents/providers", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click the highlighted file to see how agents coordinate multi-step tasks",
+          "target": "src/main/agents/orchestrator.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-6-renderer-ui",
+      "title": "React Frontend & Components",
+      "description": "The frontend is a React app with over 46 components. The email list and detail views form the core inbox experience. A rich compose editor handles email authoring. Dedicated panels surface the agent framework to users. The state store manages client data — emails, accounts, sync status, and the active account. Custom hooks handle keyboard shortcuts, batch actions, and data fetching.",
+      "estimatedTime": 75,
+      "focusDirectory": "src/renderer",
+      "highlightLayers": [
+        {
+          "id": "ui-components",
+          "name": "UI Components",
+          "color": "#10b981",
+          "items": [
+            { "path": "src/renderer/components", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "state-management",
+          "name": "State & Hooks",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "src/renderer/store", "type": "directory" },
+            { "path": "src/renderer/hooks", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        },
+        {
+          "id": "renderer-entry",
+          "name": "App Entry Point",
+          "color": "#ef4444",
+          "items": [
+            { "path": "src/renderer/App.tsx", "type": "file" },
+            { "path": "src/renderer/main.tsx", "type": "file" }
+          ],
+          "opacity": 0.8,
+          "renderStrategy": "fill"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "click-file",
+          "description": "Click the highlighted file to see the root component with account switching",
+          "target": "src/renderer/App.tsx"
+        },
+        {
+          "type": "hover-directory",
+          "description": "Hover over the components directory to see all the UI components",
+          "target": "src/renderer/components"
+        }
+      ]
+    },
+    {
+      "id": "step-7-extensions-and-data",
+      "title": "Extensions & Data Layer",
+      "description": "Exo has a plugin system with bundled extensions for calendar and web search, loaded at build time. The extension host provides an API for registering enrichment providers, UI panels, and hooks. The data layer uses SQLite with versioned migrations covering emails, analyses, drafts, accounts, and more.",
+      "estimatedTime": 60,
+      "focusDirectory": "src",
+      "highlightLayers": [
+        {
+          "id": "extensions",
+          "name": "Extensions",
+          "color": "#06b6d4",
+          "items": [
+            { "path": "src/extensions", "type": "directory" },
+            { "path": "src/main/extensions", "type": "directory" },
+            { "path": "src/renderer/extensions", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "database",
+          "name": "Database Layer",
+          "color": "#ef4444",
+          "items": [
+            { "path": "src/main/db", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "hover-directory",
+          "description": "Hover over the extensions to see the bundled calendar and web search plugins",
+          "target": "src/extensions"
+        },
+        {
+          "type": "click-file",
+          "description": "Click the highlighted file to see the database table definitions",
+          "target": "src/main/db/schema.ts"
+        }
+      ]
+    },
+    {
+      "id": "step-8-testing",
+      "title": "Testing & Quality",
+      "description": "The test suite includes 56 unit tests, 35 end-to-end tests, and an eval framework for AI prompt regression testing. Unit tests cover services, database, and utilities. End-to-end tests exercise the full app — compose, search, keyboard shortcuts, and dark mode. The eval harness runs email fixtures through the analyzer and scores against a stored baseline, catching regressions before they ship.",
+      "estimatedTime": 60,
+      "focusDirectory": "tests",
+      "highlightLayers": [
+        {
+          "id": "unit-tests",
+          "name": "Unit Tests",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "tests/unit", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "e2e-tests",
+          "name": "E2E Tests (Playwright)",
+          "color": "#10b981",
+          "items": [
+            { "path": "tests/e2e", "type": "directory" }
+          ],
+          "opacity": 0.6,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "evals",
+          "name": "AI Eval Framework",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "tests/evals", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "fill"
+        }
+      ],
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "hover-directory",
+          "description": "Hover over the evals directory to see the AI prompt regression framework",
+          "target": "tests/evals"
+        }
+      ]
+    },
+    {
+      "id": "step-9-full-picture",
+      "title": "The Complete Picture",
+      "description": "You've now seen the full architecture — backend AI services, a rich frontend, the IPC bridge connecting them, a plugin system, and comprehensive testing. Explore freely, or check the documentation resources below for deeper dives.",
+      "estimatedTime": 30,
+      "focusDirectory": "",
+      "colorMode": "fileTypes",
+      "interactiveActions": [
+        {
+          "type": "explore",
+          "description": "Explore the codebase freely — click any building to see its contents"
+        }
+      ],
+      "resources": [
+        {
+          "title": "Architecture Documentation",
+          "url": "docs/ARCHITECTURE.md",
+          "type": "documentation"
+        },
+        {
+          "title": "Testing Guide",
+          "url": "docs/TESTING.md",
+          "type": "documentation"
+        },
+        {
+          "title": "Eval Harness Documentation",
+          "url": "docs/EVALS.md",
+          "type": "documentation"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "author": "Claude",
+    "createdAt": "2026-04-04",
+    "tags": [
+      "onboarding",
+      "architecture",
+      "electron",
+      "ai-mail-client"
+    ]
+  }
+}
